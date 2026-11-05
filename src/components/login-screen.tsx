@@ -1,0 +1,80 @@
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { useDemo } from '@/contexts/DemoContext';
+import { useTheme } from '@/hooks/use-theme';
+import { Spacing } from '@/constants/theme';
+
+export function LoginScreen() {
+  const theme = useTheme();
+  const { signIn } = useDemo();
+
+  return (
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <SafeAreaView style={styles.safe}>
+        <View style={styles.hero}>
+          <Text style={[styles.logo, { color: theme.accent }]}>HerWell</Text>
+          <Text style={[styles.tagline, { color: theme.textSecondary }]}>
+            Your reproductive health companion
+          </Text>
+        </View>
+
+        <View style={[styles.banner, { backgroundColor: theme.accentSoft }]}>
+          <Text style={[styles.bannerText, { color: theme.accent }]}>
+            Demonstration Prototype — All data is synthetic
+          </Text>
+        </View>
+
+        <Text style={[styles.label, { color: theme.text }]}>Sign in as a demo patient</Text>
+
+        <TouchableOpacity
+          style={[styles.btn, { backgroundColor: theme.accent }]}
+          onPress={() => signIn('elena@demo.herwell')}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.btnText}>Elena Papadaki</Text>
+          <Text style={styles.btnSub}>elena@demo.herwell</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.btn, { backgroundColor: theme.terracotta }]}
+          onPress={() => signIn('maria@demo.herwell')}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.btnText}>Maria Nikolaou</Text>
+          <Text style={styles.btnSub}>maria@demo.herwell</Text>
+        </TouchableOpacity>
+
+        <Text style={[styles.disclaimer, { color: theme.textSecondary }]}>
+          This is NOT a production healthcare application. Never enter real patient data.
+        </Text>
+      </SafeAreaView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  safe: { flex: 1, paddingHorizontal: Spacing.four, justifyContent: 'center' },
+  hero: { alignItems: 'center', marginBottom: Spacing.five },
+  logo: { fontSize: 40, fontWeight: '700', letterSpacing: -1 },
+  tagline: { fontSize: 16, marginTop: Spacing.two },
+  banner: {
+    paddingVertical: Spacing.three,
+    paddingHorizontal: Spacing.four,
+    borderRadius: 12,
+    marginBottom: Spacing.five,
+    alignItems: 'center',
+  },
+  bannerText: { fontSize: 13, fontWeight: '600', textAlign: 'center' },
+  label: { fontSize: 15, fontWeight: '600', marginBottom: Spacing.three },
+  btn: {
+    paddingVertical: 16,
+    paddingHorizontal: Spacing.four,
+    borderRadius: 14,
+    marginBottom: Spacing.three,
+  },
+  btnText: { color: '#FFFFFF', fontSize: 17, fontWeight: '600' },
+  btnSub: { color: 'rgba(255,255,255,0.7)', fontSize: 13, marginTop: 2 },
+  disclaimer: { fontSize: 12, textAlign: 'center', marginTop: Spacing.four, lineHeight: 18 },
+});

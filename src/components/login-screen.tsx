@@ -1,4 +1,4 @@
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useDemo } from '@/contexts/DemoContext';
@@ -13,7 +13,11 @@ export function LoginScreen() {
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <SafeAreaView style={styles.safe}>
         <View style={styles.hero}>
-          <Text style={[styles.logo, { color: theme.accent }]}>HerWell</Text>
+          <Image
+            source={require('../../assets/images/logo.png')}
+            style={styles.logoImg}
+            resizeMode="contain"
+          />
           <Text style={[styles.tagline, { color: theme.textSecondary }]}>
             Your reproductive health companion
           </Text>
@@ -57,7 +61,7 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   safe: { flex: 1, paddingHorizontal: Spacing.four, justifyContent: 'center' },
   hero: { alignItems: 'center', marginBottom: Spacing.five },
-  logo: { fontSize: 40, fontWeight: '700', letterSpacing: -1 },
+  logoImg: { width: 120, height: 120, marginBottom: Spacing.two },
   tagline: { fontSize: 16, marginTop: Spacing.two },
   banner: {
     paddingVertical: Spacing.three,

@@ -15,6 +15,10 @@ const categories = [
   { value: 'note', label: 'Notes' },
 ];
 
+const CARD_SHADOW = {
+  shadowColor: '#1E1433', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2,
+};
+
 export default function PassportScreen() {
   const theme = useTheme();
   const { records, addRecord } = useDemo();
@@ -31,7 +35,7 @@ export default function PassportScreen() {
     if (!form.title || !form.date) return;
     addRecord({
       patientId: 'patient-1',
-      category: form.category,
+      category: form.category as MedicalRecord['category'],
       title: form.title,
       date: form.date,
       provider: form.provider || undefined,
@@ -41,56 +45,51 @@ export default function PassportScreen() {
     setView('list');
   }
 
-  function openDetail(rec: MedicalRecord) {
-    setSelectedId(rec.id);
-    setView('detail');
-  }
-
   if (view === 'add') {
     return (
-      <View style={[styles.container, { backgroundColor: theme.background }]}>
-        <SafeAreaView style={styles.safe}>
-          <ScrollView contentContainerStyle={styles.scroll}>
+      <View style={[s.root, { backgroundColor: theme.background }]}>
+        <SafeAreaView style={s.safe}>
+          <View style={[s.pageHeader, { backgroundColor: theme.accentSoft }]}>
             <TouchableOpacity onPress={() => setView('list')}>
-              <Text style={[styles.backBtn, { color: theme.accent }]}>Back to records</Text>
+              <Text style={[s.backBtn, { color: theme.accent }]}>← Back to records</Text>
             </TouchableOpacity>
-            <Text style={[styles.title, { color: theme.text }]}>Add record</Text>
-            <Text style={[styles.label, { color: theme.textSecondary }]}>Title</Text>
-            <TextInput
-              style={[styles.input, { backgroundColor: theme.card, borderColor: theme.border, color: theme.text }]}
-              value={form.title}
-              onChangeText={t => setForm({ ...form, title: t })}
-              placeholder="e.g. Hormone Panel"
-              placeholderTextColor={theme.textSecondary}
-            />
-            <Text style={[styles.label, { color: theme.textSecondary }]}>Date (YYYY-MM-DD)</Text>
-            <TextInput
-              style={[styles.input, { backgroundColor: theme.card, borderColor: theme.border, color: theme.text }]}
-              value={form.date}
-              onChangeText={t => setForm({ ...form, date: t })}
-              placeholder="2026-11-01"
-              placeholderTextColor={theme.textSecondary}
-            />
-            <Text style={[styles.label, { color: theme.textSecondary }]}>Provider (optional)</Text>
-            <TextInput
-              style={[styles.input, { backgroundColor: theme.card, borderColor: theme.border, color: theme.text }]}
-              value={form.provider}
-              onChangeText={t => setForm({ ...form, provider: t })}
-              placeholder="e.g. Athens Diagnostic Lab"
-              placeholderTextColor={theme.textSecondary}
-            />
-            <Text style={[styles.label, { color: theme.textSecondary }]}>Notes (optional)</Text>
-            <TextInput
-              style={[styles.input, styles.textArea, { backgroundColor: theme.card, borderColor: theme.border, color: theme.text }]}
-              value={form.notes}
-              onChangeText={t => setForm({ ...form, notes: t })}
-              multiline
-              numberOfLines={4}
-              placeholder="Results or observations"
-              placeholderTextColor={theme.textSecondary}
-            />
-            <TouchableOpacity style={[styles.primaryBtn, { backgroundColor: theme.accent }]} onPress={handleAdd}>
-              <Text style={styles.primaryBtnText}>Save record</Text>
+            <Text style={[s.pageTitle, { color: theme.text }]}>Add record</Text>
+          </View>
+          <ScrollView contentContainerStyle={s.formScroll}>
+            <View style={[s.formCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+              <Text style={[s.fieldLabel, { color: theme.textSecondary }]}>Category</Text>
+              <View style={s.catGrid}>
+                {categories.map(c => (
+                  <TouchableOpacity
+                    key={c.value}
+                    style={[s.catChip, form.category === c.value && { backgroundColor: theme.accent }]}
+                    onPress={() => setForm({ ...form, category: c.value })}
+                  >
+                    <Text style={[s.catChipText, form.category === c.value ? { color: '#FFF' } : { color: theme.textSecondary }]}>
+                      {c.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+              <Text style={[s.fieldLabel, { color: theme.textSecondary }]}>Title *</Text>
+              <TextInput style={[s.input, { backgroundColor: theme.background, borderColor: theme.border, color: theme.text }]}
+                value={form.title} onChangeText={t => setForm({ ...form, title: t })}
+                placeholder="e.g. Hormone Panel" placeholderTextColor={theme.textSecondary} />
+              <Text style={[s.fieldLabel, { color: theme.textSecondary }]}>Date * (YYYY-MM-DD)</Text>
+              <TextInput style={[s.input, { backgroundColor: theme.background, borderColor: theme.border, color: theme.text }]}
+                value={form.date} onChangeText={t => setForm({ ...form, date: t })}
+                placeholder="2026-11-01" placeholderTextColor={theme.textSecondary} />
+              <Text style={[s.fieldLabel, { color: theme.textSecondary }]}>Provider</Text>
+              <TextInput style={[s.input, { backgroundColor: theme.background, borderColor: theme.border, color: theme.text }]}
+                value={form.provider} onChangeText={t => setForm({ ...form, provider: t })}
+                placeholder="Athens Diagnostic Lab" placeholderTextColor={theme.textSecondary} />
+              <Text style={[s.fieldLabel, { color: theme.textSecondary }]}>Notes</Text>
+              <TextInput style={[s.input, s.textArea, { backgroundColor: theme.background, borderColor: theme.border, color: theme.text }]}
+                value={form.notes} onChangeText={t => setForm({ ...form, notes: t })}
+                multiline numberOfLines={4} placeholder="Results or observations" placeholderTextColor={theme.textSecondary} />
+            </View>
+            <TouchableOpacity style={[s.primaryBtn, { backgroundColor: theme.accent }]} onPress={handleAdd} activeOpacity={0.8}>
+              <Text style={s.primaryBtnText}>Save record</Text>
             </TouchableOpacity>
           </ScrollView>
         </SafeAreaView>
@@ -101,24 +100,29 @@ export default function PassportScreen() {
   if (view === 'detail' && selected) {
     const catLabel = categories.find(c => c.value === selected.category)?.label ?? selected.category;
     return (
-      <View style={[styles.container, { backgroundColor: theme.background }]}>
-        <SafeAreaView style={styles.safe}>
-          <ScrollView contentContainerStyle={styles.scroll}>
+      <View style={[s.root, { backgroundColor: theme.background }]}>
+        <SafeAreaView style={s.safe}>
+          <View style={[s.pageHeader, { backgroundColor: theme.accentSoft }]}>
             <TouchableOpacity onPress={() => setView('list')}>
-              <Text style={[styles.backBtn, { color: theme.accent }]}>Back to records</Text>
+              <Text style={[s.backBtn, { color: theme.accent }]}>← Back to records</Text>
             </TouchableOpacity>
-            <View style={[styles.badge, { backgroundColor: theme.accentSoft }]}>
-              <Text style={[styles.badgeText, { color: theme.accent }]}>{catLabel}</Text>
-            </View>
-            <Text style={[styles.title, { color: theme.text }]}>{selected.title}</Text>
-            <Text style={[styles.meta, { color: theme.textSecondary }]}>
-              {selected.date}{selected.provider ? ` · ${selected.provider}` : ''}
-            </Text>
-            {selected.notes && (
-              <View style={[styles.notesBox, { backgroundColor: theme.card, borderColor: theme.border }]}>
-                <Text style={[styles.notesText, { color: theme.text }]}>{selected.notes}</Text>
+            <Text style={[s.pageTitle, { color: theme.text }]}>{selected.title}</Text>
+          </View>
+          <ScrollView contentContainerStyle={s.formScroll}>
+            <View style={[s.formCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+              <View style={[s.chip, { backgroundColor: theme.accentSoft, alignSelf: 'flex-start' }]}>
+                <Text style={[s.chipText, { color: theme.accent }]}>{catLabel}</Text>
               </View>
-            )}
+              <Text style={[s.detailDate, { color: theme.textSecondary }]}>
+                {selected.date}{selected.provider ? ` · ${selected.provider}` : ''}
+              </Text>
+              {selected.notes && (
+                <>
+                  <View style={[s.divider, { backgroundColor: theme.border }]} />
+                  <Text style={[s.notesText, { color: theme.text }]}>{selected.notes}</Text>
+                </>
+              )}
+            </View>
           </ScrollView>
         </SafeAreaView>
       </View>
@@ -126,36 +130,37 @@ export default function PassportScreen() {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}>
-      <SafeAreaView style={styles.safe}>
-        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-          <View style={styles.headerRow}>
+    <View style={[s.root, { backgroundColor: theme.background }]}>
+      <SafeAreaView style={s.safe}>
+        <View style={[s.pageHeader, { backgroundColor: theme.accentSoft }]}>
+          <View style={s.headerRow}>
             <View>
-              <Text style={[styles.title, { color: theme.text }]}>Medical Passport</Text>
-              <Text style={[styles.subtitle, { color: theme.textSecondary }]}>{records.length} records</Text>
+              <Text style={[s.pageTitle, { color: theme.text }]}>Medical Passport</Text>
+              <Text style={[s.pageSubtitle, { color: theme.textSecondary }]}>{records.length} records</Text>
             </View>
-            <TouchableOpacity style={[styles.primaryBtn, { backgroundColor: theme.accent }]} onPress={() => setView('add')}>
-              <Text style={styles.primaryBtnText}>Add</Text>
+            <TouchableOpacity style={[s.addBtn, { backgroundColor: theme.accent }]} onPress={() => setView('add')} activeOpacity={0.8}>
+              <Text style={s.addBtnText}>+ Add</Text>
             </TouchableOpacity>
           </View>
-
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterBar}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.filterBar} contentContainerStyle={s.filterBarContent}>
             {[{ value: 'all', label: 'All' }, ...categories].map(c => (
               <TouchableOpacity
                 key={c.value}
-                style={[styles.filterChip, filter === c.value && { backgroundColor: theme.accent }]}
+                style={[s.filterChip, filter === c.value && { backgroundColor: theme.accent }]}
                 onPress={() => setFilter(c.value)}
               >
-                <Text style={[styles.filterText, filter === c.value ? { color: '#FFF' } : { color: theme.textSecondary }]}>
+                <Text style={[s.filterText, filter === c.value ? { color: '#FFF' } : { color: theme.textSecondary }]}>
                   {c.label}
                 </Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
+        </View>
 
+        <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
           {sorted.length === 0 ? (
-            <View style={styles.empty}>
-              <Text style={[styles.emptyText, { color: theme.textSecondary }]}>No records yet.</Text>
+            <View style={s.empty}>
+              <Text style={[s.emptyText, { color: theme.textSecondary }]}>No records yet — tap + Add to get started.</Text>
             </View>
           ) : (
             sorted.map(rec => {
@@ -163,51 +168,65 @@ export default function PassportScreen() {
               return (
                 <TouchableOpacity
                   key={rec.id}
-                  style={[styles.recordRow, { backgroundColor: theme.card, borderColor: theme.border }]}
-                  onPress={() => openDetail(rec)}
-                  activeOpacity={0.7}
+                  style={[s.recordCard, { backgroundColor: theme.card, borderColor: theme.border }]}
+                  onPress={() => { setSelectedId(rec.id); setView('detail'); }}
+                  activeOpacity={0.75}
                 >
-                  <View style={[styles.badge, { backgroundColor: theme.accentSoft }]}>
-                    <Text style={[styles.badgeText, { color: theme.accent }]}>{catLabel}</Text>
+                  <View style={s.recordTop}>
+                    <View style={[s.chip, { backgroundColor: theme.accentSoft }]}>
+                      <Text style={[s.chipText, { color: theme.accent }]}>{catLabel}</Text>
+                    </View>
+                    <Text style={[s.recordDate, { color: theme.textSecondary }]}>{rec.date}</Text>
                   </View>
-                  <Text style={[styles.recordTitle, { color: theme.text }]} numberOfLines={1}>{rec.title}</Text>
-                  {rec.provider && <Text style={[styles.recordProvider, { color: theme.textSecondary }]} numberOfLines={1}>{rec.provider}</Text>}
-                  <Text style={[styles.recordDate, { color: theme.textSecondary }]}>{rec.date}</Text>
+                  <Text style={[s.recordTitle, { color: theme.text }]} numberOfLines={1}>{rec.title}</Text>
+                  {rec.provider && <Text style={[s.recordProvider, { color: theme.textSecondary }]} numberOfLines={1}>{rec.provider}</Text>}
                 </TouchableOpacity>
               );
             })
           )}
+          <View style={{ height: 24 }} />
         </ScrollView>
       </SafeAreaView>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1 },
+const s = StyleSheet.create({
+  root: { flex: 1 },
   safe: { flex: 1 },
-  scroll: { paddingHorizontal: Spacing.four, paddingBottom: 100 },
-  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: Spacing.four },
-  title: { fontSize: 24, fontWeight: '700' },
-  subtitle: { fontSize: 14, marginTop: 2 },
-  backBtn: { fontSize: 15, fontWeight: '600', marginTop: Spacing.four, marginBottom: Spacing.three },
-  filterBar: { marginTop: Spacing.three, marginBottom: Spacing.three },
-  filterChip: { paddingVertical: 8, paddingHorizontal: 16, borderRadius: 20, marginRight: 8, backgroundColor: 'rgba(0,0,0,0.05)' },
+  pageHeader: { paddingHorizontal: Spacing.four, paddingTop: 16, paddingBottom: 12 },
+  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  pageTitle: { fontSize: 22, fontWeight: '700' },
+  pageSubtitle: { fontSize: 13, marginTop: 2 },
+  backBtn: { fontSize: 14, fontWeight: '600', marginBottom: 8 },
+  addBtn: { paddingHorizontal: 18, paddingVertical: 9, borderRadius: 20 },
+  addBtnText: { color: '#FFF', fontSize: 14, fontWeight: '700' },
+  filterBar: { marginTop: 12 },
+  filterBarContent: { gap: 8, paddingRight: 16 },
+  filterChip: { paddingVertical: 7, paddingHorizontal: 14, borderRadius: 20, backgroundColor: 'rgba(138,110,212,0.08)' },
   filterText: { fontSize: 13, fontWeight: '600' },
-  recordRow: { padding: Spacing.three, borderRadius: 14, borderWidth: 1, marginBottom: Spacing.three },
-  badge: { alignSelf: 'flex-start', paddingVertical: 4, paddingHorizontal: 10, borderRadius: 8, marginBottom: 8 },
-  badgeText: { fontSize: 11, fontWeight: '700', textTransform: 'uppercase' },
-  recordTitle: { fontSize: 16, fontWeight: '600' },
-  recordProvider: { fontSize: 13, marginTop: 2 },
-  recordDate: { fontSize: 12, marginTop: 4 },
-  empty: { marginTop: Spacing.five, alignItems: 'center' },
-  emptyText: { fontSize: 15 },
-  label: { fontSize: 13, fontWeight: '600', marginTop: Spacing.three, marginBottom: 6 },
-  input: { borderWidth: 1, borderRadius: 12, paddingVertical: 12, paddingHorizontal: 16, fontSize: 15 },
-  textArea: { minHeight: 100, textAlignVertical: 'top' },
-  primaryBtn: { paddingVertical: 12, paddingHorizontal: 20, borderRadius: 12, alignItems: 'center', marginTop: Spacing.four },
-  primaryBtnText: { color: '#FFF', fontSize: 15, fontWeight: '600' },
-  meta: { fontSize: 14, marginTop: 4 },
-  notesBox: { borderWidth: 1, borderRadius: 12, padding: Spacing.three, marginTop: Spacing.four },
-  notesText: { fontSize: 15, lineHeight: 22 },
+  scroll: { paddingHorizontal: Spacing.four, paddingTop: Spacing.four, paddingBottom: 80 },
+  recordCard: { borderRadius: 16, borderWidth: 1, padding: 16, marginBottom: 10, ...CARD_SHADOW },
+  recordTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  chip: { paddingVertical: 4, paddingHorizontal: 10, borderRadius: 8 },
+  chipText: { fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.3 },
+  recordDate: { fontSize: 12 },
+  recordTitle: { fontSize: 16, fontWeight: '700' },
+  recordProvider: { fontSize: 13, marginTop: 3 },
+  empty: { marginTop: 48, alignItems: 'center', paddingHorizontal: 24 },
+  emptyText: { fontSize: 15, textAlign: 'center', lineHeight: 22 },
+  // Form/detail
+  formScroll: { padding: Spacing.four, paddingBottom: 80 },
+  formCard: { borderRadius: 16, borderWidth: 1, padding: 16, marginBottom: 16, ...CARD_SHADOW },
+  fieldLabel: { fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 14, marginBottom: 6 },
+  catGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  catChip: { paddingVertical: 7, paddingHorizontal: 12, borderRadius: 10, backgroundColor: 'rgba(138,110,212,0.08)' },
+  catChipText: { fontSize: 13, fontWeight: '600' },
+  input: { borderWidth: 1, borderRadius: 12, paddingVertical: 12, paddingHorizontal: 14, fontSize: 15 },
+  textArea: { minHeight: 90, textAlignVertical: 'top' },
+  primaryBtn: { borderRadius: 14, paddingVertical: 15, alignItems: 'center' },
+  primaryBtnText: { color: '#FFF', fontSize: 16, fontWeight: '700' },
+  detailDate: { fontSize: 14, marginTop: 10 },
+  divider: { height: 1, marginVertical: 14 },
+  notesText: { fontSize: 15, lineHeight: 23 },
 });

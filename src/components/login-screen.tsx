@@ -1,95 +1,122 @@
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 
 import { useDemo } from '@/contexts/DemoContext';
-import { useTheme } from '@/hooks/use-theme';
+import { useAppTheme } from '@/contexts/ThemeContext';
+import { AnimatedBackground } from '@/components/AnimatedBackground';
 import { Spacing } from '@/constants/theme';
 
 export function LoginScreen() {
-  const theme = useTheme();
+  const { colors } = useAppTheme();
   const { signIn } = useDemo();
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}>
-      <SafeAreaView style={styles.safe}>
-        <View style={styles.hero}>
+    <AnimatedBackground>
+      <SafeAreaView style={s.safe}>
+        <View style={s.hero}>
           <Image
             source={require('../../assets/images/logo.png')}
-            style={styles.logoImg}
+            style={s.logoImg}
             resizeMode="contain"
           />
-          <Text style={[styles.tagline, { color: theme.textSecondary }]}>
+          <Text style={[s.tagline, { color: colors.textSecondary }]}>
             Your reproductive health companion
           </Text>
         </View>
 
-        <View style={[styles.banner, { backgroundColor: theme.accentSoft }]}>
-          <Text style={[styles.bannerText, { color: theme.accent }]}>
+        <View style={[s.banner, { backgroundColor: colors.accentSoft, borderColor: colors.accent + '30' }]}>
+          <Ionicons name="shield-checkmark-outline" size={14} color={colors.accent} />
+          <Text style={[s.bannerText, { color: colors.accent }]}>
             Demonstration Prototype — All data is synthetic
           </Text>
         </View>
 
-        <Text style={[styles.label, { color: theme.text }]}>HerWell — General Health</Text>
+        <Text style={[s.label, { color: colors.textSecondary }]}>HerWell — General Health</Text>
 
         <TouchableOpacity
-          style={[styles.btn, { backgroundColor: theme.accent }]}
+          style={[s.btn, { backgroundColor: colors.accent }]}
           onPress={() => signIn('elena@demo.herwell')}
           activeOpacity={0.8}
         >
-          <Text style={styles.btnText}>Elena Papadaki</Text>
-          <Text style={styles.btnSub}>Reproductive health tracker</Text>
+          <View style={s.btnInner}>
+            <Ionicons name="person-circle-outline" size={22} color="rgba(255,255,255,0.8)" />
+            <View>
+              <Text style={s.btnText}>Elena Papadaki</Text>
+              <Text style={s.btnSub}>Reproductive health tracker</Text>
+            </View>
+          </View>
+          <Ionicons name="arrow-forward" size={18} color="rgba(255,255,255,0.7)" />
         </TouchableOpacity>
 
-        <Text style={[styles.label, { color: theme.text, marginTop: 20 }]}>IVF Clinic Portal</Text>
+        <Text style={[s.label, { color: colors.textSecondary, marginTop: 20 }]}>IVF Clinic Portal</Text>
 
         <TouchableOpacity
-          style={[styles.btn, { backgroundColor: '#7c3aed' }]}
+          style={[s.btn, { backgroundColor: '#7c3aed' }]}
           onPress={() => signIn('doctor@ivf.demo')}
           activeOpacity={0.8}
         >
-          <Text style={styles.btnText}>👩‍⚕️ Δρ. Αλ. Κωστοπούλου</Text>
-          <Text style={styles.btnSub}>IVF Doctor — patient protocols</Text>
+          <View style={s.btnInner}>
+            <Ionicons name="medical-outline" size={22} color="rgba(255,255,255,0.8)" />
+            <View>
+              <Text style={s.btnText}>Dr. Al. Kostopoulou</Text>
+              <Text style={s.btnSub}>IVF Doctor — patient protocols</Text>
+            </View>
+          </View>
+          <Ionicons name="arrow-forward" size={18} color="rgba(255,255,255,0.7)" />
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.btn, { backgroundColor: '#db2777' }]}
+          style={[s.btn, { backgroundColor: '#db2777' }]}
           onPress={() => signIn('patient@ivf.demo')}
           activeOpacity={0.8}
         >
-          <Text style={styles.btnText}>🌸 Μαρία Παπαδοπούλου</Text>
-          <Text style={styles.btnSub}>IVF Patient — today's schedule</Text>
+          <View style={s.btnInner}>
+            <Ionicons name="person-outline" size={22} color="rgba(255,255,255,0.8)" />
+            <View>
+              <Text style={s.btnText}>Maria Papadopoulou</Text>
+              <Text style={s.btnSub}>IVF Patient — today's schedule</Text>
+            </View>
+          </View>
+          <Ionicons name="arrow-forward" size={18} color="rgba(255,255,255,0.7)" />
         </TouchableOpacity>
 
-        <Text style={[styles.disclaimer, { color: theme.textSecondary }]}>
+        <Text style={[s.disclaimer, { color: colors.textSecondary }]}>
           Demo prototype · Synthetic data only · Not for clinical use
         </Text>
       </SafeAreaView>
-    </View>
+    </AnimatedBackground>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1 },
+const s = StyleSheet.create({
   safe: { flex: 1, paddingHorizontal: Spacing.four, justifyContent: 'center' },
   hero: { alignItems: 'center', marginBottom: Spacing.five },
   logoImg: { width: 120, height: 120, marginBottom: Spacing.two },
-  tagline: { fontSize: 16, marginTop: Spacing.two },
+  tagline: { fontSize: 16, marginTop: Spacing.two, textAlign: 'center' },
   banner: {
-    paddingVertical: Spacing.three,
-    paddingHorizontal: Spacing.four,
-    borderRadius: 12,
-    marginBottom: Spacing.five,
+    flexDirection: 'row',
     alignItems: 'center',
-  },
-  bannerText: { fontSize: 13, fontWeight: '600', textAlign: 'center' },
-  label: { fontSize: 15, fontWeight: '600', marginBottom: Spacing.three },
-  btn: {
-    paddingVertical: 16,
-    paddingHorizontal: Spacing.four,
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     borderRadius: 14,
+    borderWidth: 1,
+    marginBottom: Spacing.five,
+  },
+  bannerText: { fontSize: 13, fontWeight: '600', flex: 1 },
+  label: { fontSize: 12, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: Spacing.three },
+  btn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+    paddingHorizontal: Spacing.four,
+    borderRadius: 18,
     marginBottom: Spacing.three,
   },
-  btnText: { color: '#FFFFFF', fontSize: 17, fontWeight: '600' },
-  btnSub: { color: 'rgba(255,255,255,0.7)', fontSize: 13, marginTop: 2 },
+  btnInner: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  btnText: { color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
+  btnSub: { color: 'rgba(255,255,255,0.65)', fontSize: 12, marginTop: 2 },
   disclaimer: { fontSize: 12, textAlign: 'center', marginTop: Spacing.four, lineHeight: 18 },
 });

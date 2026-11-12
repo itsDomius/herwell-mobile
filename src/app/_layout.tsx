@@ -1,17 +1,15 @@
 import { Tabs } from 'expo-router';
-import { useColorScheme } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { DemoProvider, useDemo } from '@/contexts/DemoContext';
+import { ThemeProvider, useAppTheme } from '@/contexts/ThemeContext';
 import { LoginScreen } from '@/components/login-screen';
-import { Colors } from '@/constants/theme';
 
 const HIDDEN = { href: null } as const;
 
 function AppNavigator() {
   const { user } = useDemo();
-  const scheme = useColorScheme();
-  const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
+  const { colors } = useAppTheme();
 
   if (!user) return <LoginScreen />;
 
@@ -21,14 +19,14 @@ function AppNavigator() {
 
   const tabStyle = {
     headerShown: false,
-    tabBarActiveTintColor: isClinic ? '#7c3aed' : colors.accent,
+    tabBarActiveTintColor: colors.accent,
     tabBarInactiveTintColor: colors.textSecondary,
     tabBarStyle: {
-      backgroundColor: colors.card,
-      borderTopColor: colors.border,
+      backgroundColor: colors.tabBg,
+      borderTopColor: colors.tabBorder,
       borderTopWidth: 1,
       paddingBottom: 4,
-      height: 56,
+      height: 60,
     },
     tabBarLabelStyle: { fontSize: 11, fontWeight: '600' as const, marginBottom: 2 },
   };
@@ -46,6 +44,7 @@ function AppNavigator() {
         <Tabs.Screen name="clinic-messages" options={HIDDEN} />
         <Tabs.Screen name="clinic-videos" options={HIDDEN} />
         <Tabs.Screen name="clinic-labs" options={HIDDEN} />
+        <Tabs.Screen name="settings" options={{ title: 'Settings', tabBarIcon: ({ color, size }) => <Ionicons name="settings-outline" size={size} color={color} /> }} />
       </Tabs>
     );
   }
@@ -63,17 +62,18 @@ function AppNavigator() {
         <Tabs.Screen name="clinic-messages" options={{ title: 'Messages', tabBarIcon: ({ color, size }) => <Ionicons name="chatbubble-outline" size={size} color={color} /> }} />
         <Tabs.Screen name="clinic-videos" options={{ title: 'Videos', tabBarIcon: ({ color, size }) => <Ionicons name="play-circle-outline" size={size} color={color} /> }} />
         <Tabs.Screen name="clinic-labs" options={{ title: 'Labs', tabBarIcon: ({ color, size }) => <Ionicons name="flask-outline" size={size} color={color} /> }} />
+        <Tabs.Screen name="settings" options={{ title: 'Settings', tabBarIcon: ({ color, size }) => <Ionicons name="settings-outline" size={size} color={color} /> }} />
       </Tabs>
     );
   }
 
-  // General HerWell user
   return (
     <Tabs screenOptions={tabStyle}>
       <Tabs.Screen name="index" options={{ title: 'Home', tabBarIcon: ({ color, size }) => <Ionicons name="home-outline" size={size} color={color} /> }} />
       <Tabs.Screen name="passport" options={{ title: 'Passport', tabBarIcon: ({ color, size }) => <Ionicons name="document-text-outline" size={size} color={color} /> }} />
       <Tabs.Screen name="tracker" options={{ title: 'Tracker', tabBarIcon: ({ color, size }) => <Ionicons name="analytics-outline" size={size} color={color} /> }} />
       <Tabs.Screen name="explore" options={{ title: 'Learn', tabBarIcon: ({ color, size }) => <Ionicons name="book-outline" size={size} color={color} /> }} />
+      <Tabs.Screen name="settings" options={{ title: 'Settings', tabBarIcon: ({ color, size }) => <Ionicons name="settings-outline" size={size} color={color} /> }} />
       <Tabs.Screen name="clinic-doctor" options={HIDDEN} />
       <Tabs.Screen name="clinic-today" options={HIDDEN} />
       <Tabs.Screen name="clinic-calendar" options={HIDDEN} />
@@ -86,8 +86,10 @@ function AppNavigator() {
 
 export default function RootLayout() {
   return (
-    <DemoProvider>
-      <AppNavigator />
-    </DemoProvider>
+    <ThemeProvider>
+      <DemoProvider>
+        <AppNavigator />
+      </DemoProvider>
+    </ThemeProvider>
   );
 }

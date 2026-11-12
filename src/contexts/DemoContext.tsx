@@ -5,6 +5,46 @@ export interface DemoUser {
   email: string;
   name: string;
   role: 'patient' | 'doctor';
+  mode?: 'general' | 'clinic';
+  clinicRole?: 'doctor' | 'patient';
+}
+
+// ── IVF Clinic types ───────────────────────────────────────────────────────
+export type ComplianceStatus = 'done' | 'pending' | 'late' | 'missed';
+
+export interface ClinicProtocol {
+  id: string; patientId: string; medication: string; dose: string;
+  route: 'injection' | 'oral' | 'vaginal'; time: string; date: string;
+  critical: boolean; version: number; videoId?: string; notes?: string;
+}
+
+export interface ClinicCompliance {
+  id: string; patientId: string; protocolEntryId: string;
+  date: string; time: string; medication: string;
+  status: ComplianceStatus; confirmedAt?: string;
+}
+
+export interface ClinicChatMessage {
+  id: string; patientId: string; fromRole: 'doctor' | 'patient';
+  fromName: string; text: string; createdAt: string; read: boolean;
+}
+
+export interface ClinicVideo {
+  id: string; medication: string; title: string; description: string; duration: string;
+}
+
+export interface ClinicLabFile {
+  id: string; patientId: string; name: string;
+  type: 'blood_test' | 'ultrasound' | 'other'; date: string;
+  reviewed: boolean; doctorNote?: string;
+}
+
+export interface ClinicPatientRecord {
+  id: string; name: string; dob: string; status: 'active' | 'pending'; joinedAt: string;
+}
+
+export interface PlanUpdateNotif {
+  id: string; patientId: string; details: string; seenByPatient: boolean; createdAt: string;
 }
 
 export interface MedicalRecord {
@@ -118,9 +158,87 @@ const SEED_PREP_QUESTIONS: PrepQuestion[] = [
   { id: 'pq-8', question: 'Do I need to adjust my thyroid medication dosage?', appointmentType: 'endocrinologist', category: 'Medication' },
 ];
 
+// ── IVF clinic seed data ──────────────────────────────────────────────────
+const IVF_TODAY = '2026-11-12';
+function dOff(base: string, days: number) {
+  const d = new Date(base); d.setDate(d.getDate() + days); return d.toISOString().split('T')[0];
+}
+
+export const IVF_DOCTOR_USER: DemoUser = { id: 'ivf-doc-1', email: 'doctor@ivf.demo', name: 'Δρ. Αλ. Κωστοπούλου', role: 'doctor', mode: 'clinic', clinicRole: 'doctor' };
+export const IVF_PATIENT_USER: DemoUser = { id: 'ivf-pat-1', email: 'patient@ivf.demo', name: 'Μαρία Παπαδοπούλου', role: 'patient', mode: 'clinic', clinicRole: 'patient' };
+
+export const IVF_PATIENTS: ClinicPatientRecord[] = [
+  { id: 'ivf-pat-1', name: 'Μαρία Παπαδοπούλου', dob: '1990-03-15', status: 'active', joinedAt: dOff(IVF_TODAY, -7) },
+  { id: 'ivf-pat-2', name: 'Ελένη Νικολάου', dob: '1988-07-22', status: 'active', joinedAt: dOff(IVF_TODAY, -3) },
+  { id: 'ivf-pat-3', name: 'Άννα Γεωργίου', dob: '1992-11-08', status: 'active', joinedAt: dOff(IVF_TODAY, -10) },
+];
+
+function makeProtos(patientId: string, startOffset: number): ClinicProtocol[] {
+  const result: ClinicProtocol[] = [];
+  let n = 0;
+  const totalDays = Math.abs(startOffset) + 4;
+  for (let d = 0; d < totalDays; d++) {
+    const date = dOff(IVF_TODAY, startOffset + d);
+    result.push({ id: `${patientId}-p-${++n}`, patientId, medication: 'Gonal-F', dose: '225 IU', route: 'injection', time: '20:00', date, critical: false, version: 1, videoId: 'ivf-vid-1' });
+    if (d >= 4) result.push({ id: `${patientId}-p-${++n}`, patientId, medication: 'Cetrotide', dose: '0.25 mg', route: 'injection', time: '09:00', date, critical: false, version: 1 });
+    result.push({ id: `${patientId}-p-${++n}`, patientId, medication: 'Progynova', dose: '2 mg', route: 'oral', time: '08:00', date, critical: false, version: 1 });
+    result.push({ id: `${patientId}-p-${++n}`, patientId, medication: 'Progynova', dose: '2 mg', route: 'oral', time: '20:00', date, critical: false, version: 1 });
+  }
+  if (patientId === 'ivf-pat-3') {
+    result.push({ id: `${patientId}-trigger`, patientId, medication: 'Ovitrelle', dose: '250 μg', route: 'injection', time: '23:00', date: IVF_TODAY, critical: true, version: 1, notes: 'Κρίσιμη ένεση — ακριβής ώρα!' });
+  }
+  return result;
+}
+
+export const IVF_PROTOCOLS: ClinicProtocol[] = [
+  ...makeProtos('ivf-pat-1', -7),
+  ...makeProtos('ivf-pat-2', -3),
+  ...makeProtos('ivf-pat-3', -10),
+];
+
+export const IVF_COMPLIANCE: ClinicCompliance[] = IVF_PROTOCOLS
+  .filter(p => p.date < IVF_TODAY)
+  .map(p => ({
+    id: `cl-${p.id}`, patientId: p.patientId, protocolEntryId: p.id,
+    date: p.date, time: p.time, medication: p.medication,
+    status: Math.random() > 0.07 ? 'done' as ComplianceStatus : 'missed' as ComplianceStatus,
+    confirmedAt: Math.random() > 0.07 ? `${p.date}T${p.time}:00` : undefined,
+  }));
+// Mark today morning Progynova as done for pat-1
+IVF_PROTOCOLS.filter(p => p.patientId === 'ivf-pat-1' && p.date === IVF_TODAY && p.time === '08:00').forEach(p => {
+  IVF_COMPLIANCE.push({ id: `cl-today-${p.id}`, patientId: p.patientId, protocolEntryId: p.id, date: IVF_TODAY, time: p.time, medication: p.medication, status: 'done', confirmedAt: `${IVF_TODAY}T08:03:00` });
+});
+
+export const IVF_MESSAGES: ClinicChatMessage[] = [
+  { id: 'cm-1', patientId: 'ivf-pat-1', fromRole: 'doctor', fromName: 'Δρ. Κωστοπούλου', text: 'Καλημέρα Μαρία! Όλα φαίνονται πολύ καλά. Συνεχίστε το πρωτόκολλο κανονικά.', createdAt: `${dOff(IVF_TODAY, -2)}T10:30:00`, read: true },
+  { id: 'cm-2', patientId: 'ivf-pat-1', fromRole: 'patient', fromName: 'Μαρία Παπαδοπούλου', text: 'Χθες ένιωσα λίγο φούσκωμα μετά την ένεση. Είναι φυσιολογικό;', createdAt: `${dOff(IVF_TODAY, -2)}T11:15:00`, read: true },
+  { id: 'cm-3', patientId: 'ivf-pat-1', fromRole: 'doctor', fromName: 'Δρ. Κωστοπούλου', text: 'Ναι, είναι απολύτως φυσιολογικό. Παρενέργεια της αγωγής.', createdAt: `${dOff(IVF_TODAY, -2)}T11:45:00`, read: true },
+  { id: 'cm-4', patientId: 'ivf-pat-3', fromRole: 'doctor', fromName: 'Δρ. Κωστοπούλου', text: 'Άννα, η κρίσιμη ένεση Ovitrelle είναι ΣΗΜΕΡΑ στις 23:00. Μην την παραλείψετε!', createdAt: `${IVF_TODAY}T08:00:00`, read: false },
+];
+
+export const IVF_VIDEOS: ClinicVideo[] = [
+  { id: 'ivf-vid-1', medication: 'Gonal-F', title: 'Πώς να κάνετε Gonal-F', description: 'Βήμα-βήμα οδηγίες για την υποδόρια ένεση.', duration: '4:32' },
+  { id: 'ivf-vid-2', medication: 'Cetrotide', title: 'Ένεση Cetrotide', description: 'Πώς να προετοιμάσετε και να χορηγήσετε το Cetrotide.', duration: '3:48' },
+  { id: 'ivf-vid-3', medication: 'Ovitrelle', title: 'Trigger Shot Ovitrelle', description: 'Κρίσιμη ένεση — ακολουθήστε τις οδηγίες με ακρίβεια.', duration: '5:10' },
+];
+
+export const IVF_LABS: ClinicLabFile[] = [
+  { id: 'ivfl-1', patientId: 'ivf-pat-1', name: 'Ορμονικό Προφίλ Ημέρα 2', type: 'blood_test', date: dOff(IVF_TODAY, -6), reviewed: true, doctorNote: 'Φυσιολογικά. Ξεκινάμε πρωτόκολλο.' },
+  { id: 'ivfl-2', patientId: 'ivf-pat-1', name: 'Υπερηχογράφημα Ημέρα 5', type: 'ultrasound', date: dOff(IVF_TODAY, -3), reviewed: true, doctorNote: '8 ωοθυλάκια. Συνεχίζουμε ίδια δόση.' },
+  { id: 'ivfl-3', patientId: 'ivf-pat-1', name: 'Ορμονικό Ημέρα 7', type: 'blood_test', date: IVF_TODAY, reviewed: false },
+];
+
+export const IVF_NOTIFICATIONS: PlanUpdateNotif[] = [
+  { id: 'pun-1', patientId: 'ivf-pat-3', details: 'Trigger shot Ovitrelle 250μg προστέθηκε σήμερα στις 23:00 (ΚΡΙΣΙΜΟ).', seenByPatient: false, createdAt: IVF_TODAY },
+];
+
+export { IVF_TODAY };
+
 const DEMO_USERS: DemoUser[] = [
   { id: 'patient-1', email: 'elena@demo.herwell', name: 'Elena Papadaki', role: 'patient' },
   { id: 'patient-2', email: 'maria@demo.herwell', name: 'Maria Nikolaou', role: 'patient' },
+  IVF_DOCTOR_USER,
+  IVF_PATIENT_USER,
 ];
 
 interface DemoState {
@@ -137,9 +255,23 @@ interface DemoState {
   addRecord: (rec: Omit<MedicalRecord, 'id'>) => void;
   addSymptom: (entry: Omit<SymptomEntry, 'id'>) => void;
   setPlan: (plan: 'free' | 'premium' | 'doctor') => void;
+  // IVF clinic
+  clinicProtocols: ClinicProtocol[];
+  clinicCompliance: ClinicCompliance[];
+  clinicMessages: ClinicChatMessage[];
+  clinicLabs: ClinicLabFile[];
+  clinicNotifications: PlanUpdateNotif[];
+  confirmClinicDose: (protocolEntryId: string, patientId: string) => void;
+  seenClinicNotif: (id: string) => void;
+  sendClinicMessage: (patientId: string, text: string) => void;
+  addClinicLab: (lab: Omit<ClinicLabFile, 'id' | 'reviewed'>) => void;
+  reviewClinicLab: (id: string, note: string) => void;
+  IVF_TODAY: string;
 }
 
 const DemoContext = createContext<DemoState | undefined>(undefined);
+
+let _clinicNid = 100;
 
 export function DemoProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<DemoUser | null>(null);
@@ -147,6 +279,11 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
   const [symptoms, setSymptoms] = useState(SEED_SYMPTOMS);
   const [appointments] = useState(SEED_APPOINTMENTS);
   const [selectedPlan, setSelectedPlan] = useState<'free' | 'premium' | 'doctor'>('free');
+  const [clinicProtocols] = useState<ClinicProtocol[]>(IVF_PROTOCOLS);
+  const [clinicCompliance, setClinicCompliance] = useState<ClinicCompliance[]>(IVF_COMPLIANCE);
+  const [clinicMessages, setClinicMessages] = useState<ClinicChatMessage[]>(IVF_MESSAGES);
+  const [clinicLabs, setClinicLabs] = useState<ClinicLabFile[]>(IVF_LABS);
+  const [clinicNotifications, setClinicNotifications] = useState<PlanUpdateNotif[]>(IVF_NOTIFICATIONS);
 
   const signIn = useCallback((email: string) => {
     const found = DEMO_USERS.find(u => u.email === email);
@@ -165,6 +302,33 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
 
   const setPlan = useCallback((plan: 'free' | 'premium' | 'doctor') => {
     setSelectedPlan(plan);
+  }, []);
+
+  const confirmClinicDose = useCallback((protocolEntryId: string, patientId: string) => {
+    const entry = clinicProtocols.find(p => p.id === protocolEntryId);
+    if (!entry) return;
+    setClinicCompliance(prev => {
+      const ex = prev.find(c => c.protocolEntryId === protocolEntryId);
+      if (ex) return prev.map(c => c.protocolEntryId === protocolEntryId ? { ...c, status: 'done', confirmedAt: new Date().toISOString() } : c);
+      return [...prev, { id: `cl-new-${++_clinicNid}`, patientId, protocolEntryId, date: entry.date, time: entry.time, medication: entry.medication, status: 'done', confirmedAt: new Date().toISOString() }];
+    });
+  }, [clinicProtocols]);
+
+  const seenClinicNotif = useCallback((id: string) => {
+    setClinicNotifications(prev => prev.map(n => n.id === id ? { ...n, seenByPatient: true } : n));
+  }, []);
+
+  const sendClinicMessage = useCallback((patientId: string, text: string) => {
+    if (!user || !text.trim()) return;
+    setClinicMessages(prev => [...prev, { id: `cm-new-${++_clinicNid}`, patientId, fromRole: user.clinicRole ?? 'patient', fromName: user.name, text: text.trim(), createdAt: new Date().toISOString(), read: false }]);
+  }, [user]);
+
+  const addClinicLab = useCallback((lab: Omit<ClinicLabFile, 'id' | 'reviewed'>) => {
+    setClinicLabs(prev => [...prev, { ...lab, id: `lab-new-${++_clinicNid}`, reviewed: false }]);
+  }, []);
+
+  const reviewClinicLab = useCallback((id: string, note: string) => {
+    setClinicLabs(prev => prev.map(l => l.id === id ? { ...l, reviewed: true, doctorNote: note } : l));
   }, []);
 
   const filtered = user
@@ -188,6 +352,17 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
       addRecord,
       addSymptom,
       setPlan,
+      clinicProtocols,
+      clinicCompliance,
+      clinicMessages,
+      clinicLabs,
+      clinicNotifications,
+      confirmClinicDose,
+      seenClinicNotif,
+      sendClinicMessage,
+      addClinicLab,
+      reviewClinicLab,
+      IVF_TODAY,
     }}>
       {children}
     </DemoContext.Provider>

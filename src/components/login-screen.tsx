@@ -29,7 +29,7 @@ export function LoginScreen() {
           </Text>
         </View>
 
-        <Text style={[styles.label, { color: theme.text }]}>Sign in as a demo patient</Text>
+        <Text style={[styles.label, { color: theme.text }]}>HerWell — General Health</Text>
 
         <TouchableOpacity
           style={[styles.btn, { backgroundColor: theme.accent }]}
@@ -37,20 +37,31 @@ export function LoginScreen() {
           activeOpacity={0.8}
         >
           <Text style={styles.btnText}>Elena Papadaki</Text>
-          <Text style={styles.btnSub}>elena@demo.herwell</Text>
+          <Text style={styles.btnSub}>Reproductive health tracker</Text>
+        </TouchableOpacity>
+
+        <Text style={[styles.label, { color: theme.text, marginTop: 20 }]}>IVF Clinic Portal</Text>
+
+        <TouchableOpacity
+          style={[styles.btn, { backgroundColor: '#7c3aed' }]}
+          onPress={() => signIn('doctor@ivf.demo')}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.btnText}>👩‍⚕️ Δρ. Αλ. Κωστοπούλου</Text>
+          <Text style={styles.btnSub}>IVF Doctor — patient protocols</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.btn, { backgroundColor: theme.terracotta }]}
-          onPress={() => signIn('maria@demo.herwell')}
+          style={[styles.btn, { backgroundColor: '#db2777' }]}
+          onPress={() => signIn('patient@ivf.demo')}
           activeOpacity={0.8}
         >
-          <Text style={styles.btnText}>Maria Nikolaou</Text>
-          <Text style={styles.btnSub}>maria@demo.herwell</Text>
+          <Text style={styles.btnText}>🌸 Μαρία Παπαδοπούλου</Text>
+          <Text style={styles.btnSub}>IVF Patient — today's schedule</Text>
         </TouchableOpacity>
 
         <Text style={[styles.disclaimer, { color: theme.textSecondary }]}>
-          This is NOT a production healthcare application. Never enter real patient data.
+          Demo prototype · Synthetic data only · Not for clinical use
         </Text>
       </SafeAreaView>
     </View>
